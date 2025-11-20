@@ -11,38 +11,29 @@ namespace Locadora.Controller
 {
     public class DocumentoController
     {
-        public void AdicionarDocumento(Documento documento, SqlConnection connection, SqlTransaction _transaction)
+        public void AdicionarDocumento(Documento documento, SqlConnection connection, SqlTransaction transaction)
         {
-            using (_transaction)
+            try
             {
-                try
-                {
-                    SqlCommand command = new SqlCommand(Documento.INSERTDOCUMENTO, connection, _transaction);
+                SqlCommand command = new SqlCommand(Documento.INSERTDOCUMENTO, connection, transaction);
 
-                    command.Parameters.AddWithValue("@ClienteID", documento.ClienteID);
-                    command.Parameters.AddWithValue("@TipoDocumento", documento.TipoDocumento);
-                    command.Parameters.AddWithValue("@Numero", documento.Numero);
-                    command.Parameters.AddWithValue("@DataEmissao", documento.DataEmissao);
-                    command.Parameters.AddWithValue("@DataValidade", documento.DataValidade);
+                command.Parameters.AddWithValue("@ClienteID", documento.ClienteID);
+                command.Parameters.AddWithValue("@TipoDocumento", documento.TipoDocumento);
+                command.Parameters.AddWithValue("@Numero", documento.Numero);
+                command.Parameters.AddWithValue("@DataEmissao", documento.DataEmissao);
+                command.Parameters.AddWithValue("@DataValidade", documento.DataValidade);
 
-                    command.ExecuteNonQuery();
-
-                    _transaction.Commit();
-                }
-                catch (SqlException ex)
-                {
-                    _transaction.Rollback();
-                    throw new Exception("Erro ao adicionar documento " + ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    _transaction.Rollback();
-                    throw new Exception("Erro inesperado ao adicionar documento " + ex.Message);
-                }
-                finally
-                {
-                    connection.Close();
-                }
+                command.ExecuteNonQuery();
+            }
+            catch (SqlException ex)
+            {
+                transaction.Rollback();
+                throw new Exception("Erro ao adicionar documento " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                throw new Exception("Erro inesperado ao adicionar documento " + ex.Message);
             }
         }
     }

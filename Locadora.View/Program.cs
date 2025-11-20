@@ -2,8 +2,8 @@
 using Locadora.Models;
 using Microsoft.Data.SqlClient;
 
-Cliente cliente = new Cliente("Novo cliente com doc", "docdoc10@emailemail.com.br");
-Documento documento = new Documento("RG", "123459999", new DateOnly(2020, 1, 1), new DateOnly(2030, 1, 1));
+Cliente cliente = new Cliente("Novo cliente com doc", "docdocdoc10@emailemail.com.br");
+Documento documento = new Documento("RG", "123455599", new DateOnly(2020, 1, 1), new DateOnly(2030, 1, 1));
 
 //Console.WriteLine(cliente);
 

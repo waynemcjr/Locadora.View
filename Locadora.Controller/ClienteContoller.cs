@@ -133,7 +133,7 @@ namespace Locadora.Controller
 
             var clienteEncontrado = this.BuscaClientePorEmail(email);
 
-            if(clienteEncontrado is null)
+            if (clienteEncontrado is null)
                 throw new Exception("Não existe cliente com esse email cadastrado!");
 
             clienteEncontrado.setTelefone(telefone);
@@ -155,6 +155,32 @@ namespace Locadora.Controller
             catch (Exception ex)
             {
                 throw new Exception("Erro inesperado ao atualizar telefone do cliente: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+
+        public void DeletarCliente(string email)
+        {
+            var connection = new SqlConnection(ConnectionDB.GetConnectionString());
+
+            try
+            {
+                connection.Open();
+
+                SqlCommand command = new SqlCommand(Cliente.DELETECLIENTE, connection);
+                command.Parameters.AddWithValue("@Email", email);
+                command.ExecuteNonQuery();
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("Erro ao deletar o cliente: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Erro inesperado ao deletar cliente: " + ex.Message);
             }
             finally
             {

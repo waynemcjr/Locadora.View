@@ -6,7 +6,7 @@ namespace Locadora.Models
     {
         public readonly static string INSERTCLIENTE = "INSERT INTO tblClientes VALUES(@Nome, @Email, @Telefone); SELECT SCOPE_IDENTITY()";
 
-        public readonly static string SELECTALLCLIENTES = "SELECT * FROM tblClientes";
+        public readonly static string SELECTALLCLIENTES = "SELECT c.Nome,c.Email, c.Telefone, d.TipoDocumento, d.Numero, d.DataEmissao, d.DataValidade FROM tblClientes c JOIN tblDocumentos d ON d.ClienteID = c.ClienteID";
 
         public readonly static string UPDATEFONECLIENTE = "UPDATE tblClientes SET Telefone = @Telefone WHERE ClienteID = @idCliente";
 
@@ -14,6 +14,8 @@ namespace Locadora.Models
 
         public readonly static string DELETECLIENTE = "DELETE FROM tblClientes WHERE ClienteID = @ClienteId";
 
+
+        public Documento Documento { get; private set; }
         public int ClienteID { get; private set; }
         public string Nome { get; private set; }
         public string Email { get; private set; }
@@ -32,7 +34,7 @@ namespace Locadora.Models
 
         public override string? ToString()
         {
-            return $"Nome: {Nome}\nEmail: {Email}\nTelefone: {Telefone}\n";
+            return $"Nome: {Nome}\nEmail: {Email}\nTelefone: {Telefone}\n" + this.Documento;
         }
 
         public void setClienteID(int clienteID)
@@ -43,6 +45,10 @@ namespace Locadora.Models
         public void setTelefone(string telefone)
         {
             Telefone = telefone;
+        }
+        public void setDocumento(Documento documento)
+        {
+            Documento = documento;
         }
     }
 }

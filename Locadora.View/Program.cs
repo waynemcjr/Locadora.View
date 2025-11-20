@@ -9,28 +9,28 @@ Documento documento = new Documento("RG", "123455599", new DateOnly(2020, 1, 1),
 
 var clienteContoller = new ClienteController();
 
+//try
+//{
+//    clienteContoller.AdicionarCliente(cliente, documento);
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex.Message);
+//}
+
 try
 {
-    clienteContoller.AdicionarCliente(cliente, documento);
+    var listadeClientes = clienteContoller.ListarTodosClientes();
+
+    foreach (var clientedaLista in listadeClientes)
+    {
+        Console.WriteLine(clientedaLista);
+    }
 }
 catch (Exception ex)
 {
     Console.WriteLine(ex.Message);
 }
-
-//try
-//{
-//    var listadeClientes = clienteContoller.ListarTodosClientes();
-
-//    foreach (var clientedaLista in listadeClientes)
-//    {
-//        Console.WriteLine(clientedaLista);
-//    }
-//}
-//catch(Exception ex)
-//{
-//    Console.WriteLine(ex.Message);
-//}
 
 //clienteContoller.AtualizarTelefoneCliente("99999-9999", "novoteste@emailemail.com.br");
 //Console.WriteLine(clienteContoller.BuscaClientePorEmail("novoteste@emailemail.com.br"));

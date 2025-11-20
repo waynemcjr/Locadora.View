@@ -2,21 +2,21 @@
 using Locadora.Models;
 using Microsoft.Data.SqlClient;
 
-//Cliente cliente = new Cliente("Novo cliente de teste", "novoteste@emailemail.com.br");
-//Documento documento = new Documento(1, "RG", "123456789", new DateOnly(2020, 1, 1), new DateOnly(2030, 1, 1));
+Cliente cliente = new Cliente("Novo cliente com doc", "docdoc10@emailemail.com.br");
+Documento documento = new Documento("RG", "123459999", new DateOnly(2020, 1, 1), new DateOnly(2030, 1, 1));
 
 //Console.WriteLine(cliente);
 
-var clienteContoller = new ClienteContoller();
+var clienteContoller = new ClienteController();
 
-//try
-//{
-//clienteContoller.AdicionarCliente(cliente);
-//}
-//catch(Exception ex)
-//{
-//    Console.WriteLine(ex.Message);
-//}
+try
+{
+    clienteContoller.AdicionarCliente(cliente, documento);
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
 
 //try
 //{
@@ -35,16 +35,13 @@ var clienteContoller = new ClienteContoller();
 //clienteContoller.AtualizarTelefoneCliente("99999-9999", "novoteste@emailemail.com.br");
 //Console.WriteLine(clienteContoller.BuscaClientePorEmail("novoteste@emailemail.com.br"));
 
-try
-{
-    clienteContoller.DeletarCliente("novoteste@emailemail.com.br");
-}
-catch(SqlException ex)
-{
-       Console.WriteLine("Erro ao deletar cliente na program com o sql " + ex.Message);
-}
-catch(Exception ex)
-{
-    Console.WriteLine("Erro ao deletar cliente na program " + ex.Message);
-}
+//try
+//{
+//    clienteContoller.DeletarCliente("novo@emailemail.com.br");
+//    Console.WriteLine("Cliente deletado com sucesso!");
+//}
+//catch(Exception ex)
+//{
+//    Console.WriteLine("Erro ao deletar cliente na program " + ex.Message);
+//}
 

@@ -6,9 +6,9 @@ using Utils.Databases;
 
 namespace Locadora.Controller
 {
-    public class ClienteContoller
+    public class ClienteController
     {
-        public void AdicionarCliente(Cliente cliente)
+        public void AdicionarCliente(Cliente cliente, Documento documento)
         {
             var connection = new SqlConnection(ConnectionDB.GetConnectionString());
             connection.Open();
@@ -22,7 +22,15 @@ namespace Locadora.Controller
                     command.Parameters.AddWithValue("@Email", cliente.Email);
                     command.Parameters.AddWithValue("@Telefone", cliente.Telefone ?? (object)DBNull.Value);
 
-                    cliente.setClienteID(Convert.ToInt32(command.ExecuteScalar()));
+                    int clienteId = Convert.ToInt32(command.ExecuteScalar());
+
+                    cliente.setClienteID(clienteId);
+
+                    var documentoController = new DocumentoController();
+
+                    documento.setClienteID(clienteId);
+
+                    documentoController.AdicionarDocumento(documento, connection, transaction);
 
                     transaction.Commit();
                 }
@@ -176,7 +184,7 @@ namespace Locadora.Controller
                 connection.Open();
 
                 SqlCommand command = new SqlCommand(Cliente.DELETECLIENTE, connection);
-                command.Parameters.AddWithValue("@Email", email);
+                command.Parameters.AddWithValue("@ClienteId", clienteEncontrado.ClienteID);
                 command.ExecuteNonQuery();
             }
             catch (SqlException ex)

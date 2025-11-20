@@ -166,6 +166,11 @@ namespace Locadora.Controller
         {
             var connection = new SqlConnection(ConnectionDB.GetConnectionString());
 
+            var clienteEncontrado = this.BuscaClientePorEmail(email);
+
+            if (clienteEncontrado is null)
+                throw new Exception("Não existe cliente com esse email cadastrado!");
+
             try
             {
                 connection.Open();

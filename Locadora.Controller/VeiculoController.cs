@@ -109,7 +109,34 @@ namespace Locadora.Controller
 
         public void DeletarVeiculo(int idVeiculo)
         {
-            throw new NotImplementedException();
+            SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString());
+            connection.Open();
+
+
+            using (SqlTransaction transaction = connection.BeginTransaction())
+            {
+                SqlCommand command = new SqlCommand(Veiculo.DELETEVEICULO, connection, transaction);
+                try
+                {
+                    command.Parameters.AddWithValue("@IdVeiculo", idVeiculo);
+
+                    transaction.Commit();
+                }
+                catch (SqlException ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Erro ao deletar veiculo " + ex.Message);
+
+                }catch(Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Erro inesperado ao deletar veiculo" + ex.Message); 
+                }
+                finally
+                {
+                    connection.Close();
+                }
+            }
         }
 
         public List<Veiculo> ListarTodosVeiculos()

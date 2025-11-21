@@ -122,4 +122,13 @@ var veiculoController = new VeiculoController();
 //    Console.WriteLine("Erro ao procurar " + ex.Message);
 //}
 
+//try
+//{
+//    var veiculo = veiculoController.BuscarVeiculoPlaca("GHI9012");
+//    veiculoController.DeletarVeiculo(veiculo.VeiculoID);
+//}
+//catch(Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
 #endregion

@@ -121,6 +121,13 @@ namespace Locadora.Controller
                           reader["Telefone"] != DBNull.Value ?
                           reader["Telefone"].ToString() : null);
                     cliente.setClienteID(Convert.ToInt32(reader["ClienteID"]));
+
+                    var documento = new Documento(reader["TipoDocumento"].ToString(),
+                              reader["Numero"].ToString(),
+                              DateOnly.FromDateTime(reader.GetDateTime(6)),
+                              DateOnly.FromDateTime(reader.GetDateTime(7))
+                             );
+                    cliente.setDocumento(documento);
                     return cliente;
                 }
                 return null;
@@ -206,6 +213,42 @@ namespace Locadora.Controller
             finally
             {
                 connection.Close();
+            }
+        }
+
+        public void AtualizarDocumentoCliente(string email, Documento documento)
+        {
+
+            var clienteEncontrado = BuscaClientePorEmail(email) ??
+                throw new Exception("Cliente não encontrado com o email informado.");
+
+            SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString());
+            connection.Open();
+
+            using (SqlTransaction transaction = connection.BeginTransaction())
+            {
+                try
+                {
+                    documento.setClienteID(clienteEncontrado.ClienteID);
+                    DocumentoController documentoController = new DocumentoController();
+                    documentoController.AtualizarDocumento(documento, connection, transaction);
+
+                    transaction.Commit();
+                }
+                catch (SqlException ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Erro ao atualizar documento do cliente: " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Erro inesperado ao atualizar documento do cliente: " + ex.Message);
+                }
+                finally
+                {
+                    connection.Close();
+                }
             }
         }
     }

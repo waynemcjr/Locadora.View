@@ -10,7 +10,7 @@ namespace Locadora.Models
 
         public readonly static string UPDATEFONECLIENTE = "UPDATE tblClientes SET Telefone = @Telefone WHERE ClienteID = @idCliente";
 
-        public readonly static string SELECTCLIENTEPOREMAIL = "SELECT * FROM tblClientes WHERE Email = @Email";
+        public readonly static string SELECTCLIENTEPOREMAIL = "SELECT c.ClienteID, c.Nome,c.Email, c.Telefone, d.TipoDocumento, d.Numero, d.DataEmissao, d.DataValidade FROM tblClientes c JOIN tblDocumentos d ON d.ClienteID = c.ClienteID WHERE Email = @Email";
 
         public readonly static string DELETECLIENTE = "DELETE FROM tblClientes WHERE ClienteID = @ClienteId";
 

@@ -1,10 +1,11 @@
 ﻿using Locadora.Controller;
 using Locadora.Models;
+using Locadora.Models.Enums;
 using Microsoft.Data.SqlClient;
 
 #region Testes Clientes
 //Cliente cliente = new Cliente("Novo cliente com doc", "docdocdoc10@emailemail.com.br");
-Documento documento = new Documento("CIN", "1122334455", new DateOnly(2025, 1, 1), new DateOnly(2035, 1, 1));
+//Documento documento = new Documento("CIN", "1122334455", new DateOnly(2025, 1, 1), new DateOnly(2035, 1, 1));
 
 //Console.WriteLine(cliente);
 
@@ -46,15 +47,15 @@ var clienteContoller = new ClienteController();
 //    Console.WriteLine("Erro ao deletar cliente na program " + ex.Message);
 //}
 
-try
-{
-    clienteContoller.AtualizarDocumentoCliente("docdocdoc10@emailemail.com.br", documento);
-    Console.WriteLine(clienteContoller.BuscaClientePorEmail("docdocdoc10@emailemail.com.br"));
-}
-catch (Exception ex)
-{
-    Console.WriteLine(ex.Message);
-}
+//try
+//{
+//    clienteContoller.AtualizarDocumentoCliente("docdocdoc10@emailemail.com.br", documento);
+//    Console.WriteLine(clienteContoller.BuscaClientePorEmail("docdocdoc10@emailemail.com.br"));
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine(ex.Message);
+//}
 #endregion
 
 #region Testes Categoria
@@ -81,5 +82,34 @@ var categoriaController = new CategoriaController();
 //Console.WriteLine(categoria);
 
 //categoriaController.DeletarCategoria("Luxo premium");
+
+#endregion
+
+#region Teste Veiculos
+
+var veiculoController = new VeiculoController();
+//try
+//{
+//    var veiculo = new Veiculo(1, "ABX-1234", "Civic", "Honda", 2025, EStatusVeiculo.Disponivel.ToString());
+//    veiculoController.AdicionarVeiculo(veiculo);
+//    Console.WriteLine(veiculo);
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine("Erro ao criar veículo :" + ex.Message);
+//}
+
+try
+{
+    var veiculos = veiculoController.ListarTodosVeiculos();
+    foreach (var veiculo in veiculos)
+    {
+        Console.WriteLine(veiculo);
+    }
+}
+catch(Exception ex)
+{
+    Console.WriteLine("Erro ao exibir a lista " + ex.Message);
+}
 
 #endregion

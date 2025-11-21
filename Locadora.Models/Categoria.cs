@@ -23,10 +23,10 @@ namespace Locadora.Models
         public string? Descricao { get; private set; } = String.Empty;
         public decimal Diaria { get; private set; }
 
-        public Categoria(string nome, string? descricao, decimal diaria)
+        public Categoria(string nome, string descicao, decimal diaria)
         {
             Nome = nome;
-            Descricao = descricao;
+            Descricao = descicao;
             Diaria = diaria;
         }
 

@@ -79,13 +79,14 @@ namespace Locadora.Controller
                         while (reader.Read())
                         {
                             veiculo = new Veiculo(
-                                                          reader.GetInt32(0),
-                                                          reader.GetString(1),
+                                                          reader.GetInt32(1),
                                                           reader.GetString(2),
                                                           reader.GetString(3),
-                                                          reader.GetInt32(4),
-                                                          reader.GetString(5)
+                                                          reader.GetString(4),
+                                                          reader.GetInt32(5),
+                                                          reader.GetString(6)
                                                          );
+                            veiculo.setVeiculoID(reader.GetInt32(0));
                         }
                     }
                 }

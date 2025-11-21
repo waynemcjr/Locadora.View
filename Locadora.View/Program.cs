@@ -112,14 +112,14 @@ var veiculoController = new VeiculoController();
 //    Console.WriteLine("Erro ao exibir a lista " + ex.Message);
 //}
 
-try
-{
-    var v = veiculoController.BuscarVeiculoPlaca("GHI9012");
-    Console.WriteLine(v);
-}
-catch(Exception ex)
-{
-    Console.WriteLine("Erro ao procurar " + ex.Message);
-}
+//try
+//{
+//    var v = veiculoController.BuscarVeiculoPlaca("GHI9012");
+//    Console.WriteLine(v);
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine("Erro ao procurar " + ex.Message);
+//}
 
 #endregion

@@ -99,17 +99,27 @@ var veiculoController = new VeiculoController();
 //    Console.WriteLine("Erro ao criar veículo :" + ex.Message);
 //}
 
+//try
+//{
+//    var veiculos = veiculoController.ListarTodosVeiculos();
+//    foreach (var veiculo in veiculos)
+//    {
+//        Console.WriteLine(veiculo);
+//    }
+//}
+//catch(Exception ex)
+//{
+//    Console.WriteLine("Erro ao exibir a lista " + ex.Message);
+//}
+
 try
 {
-    var veiculos = veiculoController.ListarTodosVeiculos();
-    foreach (var veiculo in veiculos)
-    {
-        Console.WriteLine(veiculo);
-    }
+    var v = veiculoController.BuscarVeiculoPlaca("GHI9012");
+    Console.WriteLine(v);
 }
 catch(Exception ex)
 {
-    Console.WriteLine("Erro ao exibir a lista " + ex.Message);
+    Console.WriteLine("Erro ao procurar " + ex.Message);
 }
 
 #endregion

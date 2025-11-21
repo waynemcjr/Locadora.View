@@ -17,7 +17,7 @@ namespace Locadora.Models
                                                     Placa, Marca, Modelo, Ano, StatusVeiculo
                                                     FROM tblVeiculos";
 
-        public readonly static string SELECTVEICULOBYPLACA = @"SELECT VeiculoID, CategoriaID, 
+        public readonly static string SELECTVEICULOBYPLACA = @"SELECT CategoriaID, 
                                                     Placa, Marca, Modelo, Ano, StatusVeiculo
                                                     FROM tblVeiculos
                                                     WHERE Placa = @Placa";
@@ -59,7 +59,7 @@ namespace Locadora.Models
 
         public override string? ToString()
         {
-            return $"CategoriaID {CategoriaID}\nPlaca: {Placa}\nMarca: {Marca}\nModelo: {Modelo}\nAno: {Ano}\nStatus: {StatusVeiculo}\n";
+            return $"CategoriaID: {CategoriaID}\nPlaca: {Placa}\nMarca: {Marca}\nModelo: {Modelo}\nAno: {Ano}\nStatus: {StatusVeiculo}\n";
         }
     }
 }

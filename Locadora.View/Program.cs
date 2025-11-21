@@ -131,4 +131,15 @@ var veiculoController = new VeiculoController();
 //{
 //    Console.WriteLine("Erro " + ex.Message);
 //}
+
+//try
+//{
+//    Console.WriteLine(veiculoController.BuscarVeiculoPlaca("MNO7890"));
+//    veiculoController.AtualizarStatusVeiculo(EStatusVeiculo.Reservado.ToString(), "MNO7890");
+//    Console.WriteLine(veiculoController.BuscarVeiculoPlaca("MNO7890"));
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
 #endregion

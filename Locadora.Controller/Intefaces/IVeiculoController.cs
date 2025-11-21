@@ -15,7 +15,7 @@ namespace Locadora.Controller.Intefaces
 
         public Veiculo BuscarVeiculoPlaca(string placa);
 
-        public void AtualizarStatusVeiculo(string statusVeiculo);
+        public void AtualizarStatusVeiculo(string statusVeiculo, string placa);
 
         public void DeletarVeiculo(int idVeiculo);
     }

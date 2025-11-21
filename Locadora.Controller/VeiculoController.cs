@@ -55,9 +55,42 @@ namespace Locadora.Controller
 
         }
 
-        public void AtualizarStatusVeiculo(string statusVeiculo)
+        public void AtualizarStatusVeiculo(string statusVeiculo, string placa)
         {
-            throw new NotImplementedException();
+            Veiculo veiculo = BuscarVeiculoPlaca(placa) ??
+            throw new Exception("Veiculo nao encontrado!");
+
+            SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString());
+            connection.Open();
+
+            using (SqlTransaction transaction = connection.BeginTransaction())
+            {
+                SqlCommand command = new SqlCommand(Veiculo.UPDATESTATUSVEICULO, connection, transaction);
+                try
+                {
+                    command.Parameters.AddWithValue("@StatusVeiculo", statusVeiculo);
+                    command.Parameters.AddWithValue("@IdVeiculo", veiculo.VeiculoID);
+
+                    command.ExecuteNonQuery();
+
+                    transaction.Commit();
+                }
+                catch (SqlException ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Erro ao atualizar o status do veiculo " + ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw new Exception("Erro inesperado ao atualizar o status do veiculo " + ex.Message);
+                }
+                finally
+                {
+                    connection.Close();
+                }
+
+            }
         }
 
         public Veiculo BuscarVeiculoPlaca(string placa)
@@ -127,10 +160,11 @@ namespace Locadora.Controller
                     transaction.Rollback();
                     throw new Exception("Erro ao deletar veiculo " + ex.Message);
 
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     transaction.Rollback();
-                    throw new Exception("Erro inesperado ao deletar veiculo" + ex.Message); 
+                    throw new Exception("Erro inesperado ao deletar veiculo" + ex.Message);
                 }
                 finally
                 {

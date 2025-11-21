@@ -4,11 +4,11 @@ using Microsoft.Data.SqlClient;
 
 #region Testes Clientes
 //Cliente cliente = new Cliente("Novo cliente com doc", "docdocdoc10@emailemail.com.br");
-//Documento documento = new Documento("CPF", "12345678910", new DateOnly(2025, 1, 1), new DateOnly(2035, 1, 1));
+Documento documento = new Documento("CIN", "1122334455", new DateOnly(2025, 1, 1), new DateOnly(2035, 1, 1));
 
 //Console.WriteLine(cliente);
 
-//var clienteContoller = new ClienteController();
+var clienteContoller = new ClienteController();
 
 //try
 //{
@@ -46,15 +46,15 @@ using Microsoft.Data.SqlClient;
 //    Console.WriteLine("Erro ao deletar cliente na program " + ex.Message);
 //}
 
-//try
-//{
-//    clienteContoller.AtualizarDocumentoCliente("docdocdoc10@emailemail.com.br", documento);
-//    Console.WriteLine(clienteContoller.BuscaClientePorEmail("docdocdoc10@emailemail.com.br"));
-//}
-//catch (Exception ex)
-//{
-//    Console.WriteLine(ex.Message);
-//}
+try
+{
+    clienteContoller.AtualizarDocumentoCliente("docdocdoc10@emailemail.com.br", documento);
+    Console.WriteLine(clienteContoller.BuscaClientePorEmail("docdocdoc10@emailemail.com.br"));
+}
+catch (Exception ex)
+{
+    Console.WriteLine(ex.Message);
+}
 #endregion
 
 #region Testes Categoria

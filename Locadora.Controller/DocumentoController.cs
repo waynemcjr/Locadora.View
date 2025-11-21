@@ -44,7 +44,7 @@ namespace Locadora.Controller
             {
                 SqlCommand command = new SqlCommand(Documento.UPDATEDOCUMENTO, connection, transaction);
 
-                command.Parameters.AddWithValue("@ClienteID", documento.ClienteID);
+                command.Parameters.AddWithValue("@IdCliente", documento.ClienteID);
                 command.Parameters.AddWithValue("@TipoDocumento", documento.TipoDocumento);
                 command.Parameters.AddWithValue("@Numero", documento.Numero);
                 command.Parameters.AddWithValue("@DataEmissao", documento.DataEmissao);

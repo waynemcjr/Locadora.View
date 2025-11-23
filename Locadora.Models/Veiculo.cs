@@ -30,7 +30,8 @@ namespace Locadora.Models
                                                 WHERE VeiculoID = @IdVeiculo";
 
         public int VeiculoID { get; private set; }
-        public int CategoriaID { get; set; }
+        public int CategoriaID { get; private set; }
+        public string NomeCategoria { get; private set; }
         public string Placa { get; private set; }
         public string Marca { get; private set; }
         public string Modelo { get; private set; }
@@ -57,9 +58,14 @@ namespace Locadora.Models
             StatusVeiculo = statusVeiculo;
         }
 
+        public void setNomeCategoria(string nomeCategoria)
+        {
+            NomeCategoria = nomeCategoria;
+        }
+
         public override string? ToString()
         {
-            return $"CategoriaID: {CategoriaID}\nPlaca: {Placa}\nMarca: {Marca}\nModelo: {Modelo}\nAno: {Ano}\nStatus: {StatusVeiculo}\n";
+            return $"Categoria: {NomeCategoria}\nPlaca: {Placa}\nMarca: {Marca}\nModelo: {Modelo}\nAno: {Ano}\nStatus: {StatusVeiculo}\n";
         }
     }
 }

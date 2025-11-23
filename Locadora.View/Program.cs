@@ -107,14 +107,14 @@ var veiculoController = new VeiculoController();
 //        Console.WriteLine(veiculo);
 //    }
 //}
-//catch(Exception ex)
+//catch (Exception ex)
 //{
 //    Console.WriteLine("Erro ao exibir a lista " + ex.Message);
 //}
 
 //try
 //{
-//    var v = veiculoController.BuscarVeiculoPlaca("GHI9012");
+//    var v = veiculoController.BuscarVeiculoPlaca("ABX-1234");
 //    Console.WriteLine(v);
 //}
 //catch (Exception ex)
@@ -142,4 +142,64 @@ var veiculoController = new VeiculoController();
 //{
 //    Console.WriteLine("Erro " + ex.Message);
 //}
+#endregion
+
+#region Teste Funcionario
+
+var funcionarioController = new FuncionarioController();
+
+//var funcionario = new Funcionario("Wayne", "1111222234", "wayne@gmail.com", 2800.88m);
+
+//try
+//{
+//    funcionarioController.AdicionarFuncionario(funcionario);
+
+//    Console.WriteLine(funcionario);
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
+
+//try
+//{
+//    funcionarioController.AtualizarFuncionarioPorCPF(100000.99m, "1111222234");
+//}
+//catch(Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
+
+//try
+//{
+//    Console.WriteLine(funcionarioController.BuscarFuncionarioPorCPF("1111222234"));
+//}
+//catch (Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
+
+//try
+//{
+//    funcionarioController.DeletarFuncionarioPorCPF("1111222234");
+//}
+//catch(Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
+
+//try
+//{
+//    var listaFuncionario = funcionarioController.ListarTodosFuncionarios();
+
+//    foreach (var funcionarios in listaFuncionario)
+//    {
+//        Console.WriteLine(funcionarios);
+//    }
+//}
+//catch(Exception ex)
+//{
+//    Console.WriteLine("Erro " + ex.Message);
+//}
+
 #endregion

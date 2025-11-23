@@ -18,6 +18,8 @@ namespace Locadora.Models
 
         public readonly static string DELETECATEGORIA = "DELETE tblCategorias WHERE CategoriaID = @IdCategoria";
 
+        public readonly static string SELECTNOMECATEGORIAPORID = "SELECT Nome FROM tblCategorias WHERE CategoriaID = @Id";
+
         public int CategoriaID { get; private set; }
         public string Nome { get; private set; }
         public string? Descricao { get; private set; } = String.Empty;

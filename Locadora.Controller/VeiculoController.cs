@@ -97,6 +97,8 @@ namespace Locadora.Controller
         {
             Veiculo veiculo = null;
 
+            var categoriaController = new CategoriaController();
+
             SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString());
 
             connection.Open();
@@ -120,6 +122,11 @@ namespace Locadora.Controller
                                                           reader.GetString(6)
                                                          );
                             veiculo.setVeiculoID(reader.GetInt32(0));
+
+                            veiculo.setNomeCategoria(
+                            categoriaController.BuscarNomeCategoriaPorId(
+                            veiculo.CategoriaID)
+                                                    );
                         }
                     }
                 }
@@ -177,6 +184,8 @@ namespace Locadora.Controller
         {
             var veiculos = new List<Veiculo>();
 
+            var categoriaController = new CategoriaController();
+
             SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString());
 
             connection.Open();
@@ -197,6 +206,10 @@ namespace Locadora.Controller
                                                           reader.GetInt32(4),
                                                           reader.GetString(5)
                                                          );
+                            veiculo.setNomeCategoria(
+                            categoriaController.BuscarNomeCategoriaPorId(
+                            veiculo.CategoriaID)
+                                                    );
                             veiculos.Add(veiculo);
                         }
                     }

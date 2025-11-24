@@ -1,5 +1,7 @@
 ﻿using Locadora.Controller;
+using Locadora.Controller.Interfaces;
 using Locadora.Models;
+using Locadora.Models.Enums;
 
 namespace Locadora.View.Menus
 {
@@ -43,7 +45,7 @@ namespace Locadora.View.Menus
                             }
                             try
                             {
-                                categoriaController.AdicionarCategoria(new Categoria(nomeCategoria,descricaoCategoria,diariaCategoria));
+                                categoriaController.AdicionarCategoria(new Categoria(nomeCategoria, descricaoCategoria, diariaCategoria));
                                 PositiveMessage("CATEGORIA ADICIONADA COM SUCESSO!");
                             }
                             catch (Exception e)
@@ -54,8 +56,68 @@ namespace Locadora.View.Menus
                             Console.Read();
                             break;
                         case 2:
+                            Console.Clear();
+                            Console.WriteLine("---------------| LISTA DE VEÍCULOS COM CATEGORIA |---------------");
+
+                            try
+                            {
+                                Console.WriteLine("");
+                                List<Veiculo> veiculos = veiculoController.ListarTodosVeiculos();
+
+                                foreach (Veiculo v in veiculos)
+                                {
+                                    Console.WriteLine(v);
+                                    Console.WriteLine("--------------------------------------------------------------");
+                                }
+                                if (veiculos.Count < 1)
+                                    Console.WriteLine("Não há veículos cadastrados.");
+                            }
+                            catch (Exception e)
+                            {
+                                ErrorMessage(e.ToString());
+                            }
+
+                            AlertMessage("Pressione qualquer tecla para voltar à GERENCIAR CATEGORIAS E VEÍCULOS.");
+                            Console.Read();
                             break;
                         case 3:
+                            Console.Clear();
+                            Console.WriteLine("------------| CADASTRAR VEÍCULO |------------");
+
+                            Console.Write("Digite o ID da categoria: ");
+                            if (!int.TryParse(Console.ReadLine(), out int idCategoria))
+                            {
+
+                                ErrorMessage("DIGITE O ID DA CATEGORIA CORRETAMENTE!");
+                            }
+                            Console.Write("Digite a placa do veículo: ");
+                            string placaVeiculo = Console.ReadLine()!;
+                            Console.Write("Digite a marca do veículo: ");
+                            string marcaVeiculo = Console.ReadLine()!;
+                            Console.Write("Digite o modelo do veículo: ");
+                            string modeloVeiculo = Console.ReadLine()!;
+                            Console.Write("Digite o ano do veículo: ");
+                            if (!int.TryParse(Console.ReadLine(), out int anoVeiculo))
+                            {
+
+                                ErrorMessage("DIGITE O ANO DO VEÍCULO CORRETAMENTE!");
+                            }
+                            if (anoVeiculo > (DateTime.Now.Year + 1))
+                            {
+
+                                ErrorMessage("DIGITE O ANO DO VEÍCULO CORRETAMENTE!");
+                            }
+                            try
+                            {
+                                veiculoController.AdicionarVeiculo(new Veiculo(idCategoria, placaVeiculo, marcaVeiculo, modeloVeiculo, anoVeiculo, "Disponível"));
+                                PositiveMessage("VEÍCULO ADICIONADO COM SUCESSO!");
+                            }
+                            catch (Exception e)
+                            {
+                                ErrorMessage(e.ToString());
+                            }
+                            AlertMessage("Pressione qualquer tecla para voltar à GERENCIAR CATEGORIAS E VEÍCULOS.");
+                            Console.Read();
                             break;
                         case 4:
                             break;

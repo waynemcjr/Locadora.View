@@ -14,6 +14,9 @@ namespace Locadora.Controller
 {
     public class VeiculoController : IVeiculoController
     {
+
+        private CategoriaController categoriaController = new();
+
         public void AdicionarVeiculo(Veiculo veiculo)
         {
             using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
@@ -22,12 +25,12 @@ namespace Locadora.Controller
 
                 using (SqlTransaction transaction = connection.BeginTransaction())
                 {
-                    
+
                     try
                     {
-                        SqlCommand command = new SqlCommand(Veiculo.INSERTVEICULO, connection,transaction);
+                        SqlCommand command = new SqlCommand(Veiculo.INSERTVEICULO, connection, transaction);
 
-                        command.Parameters.AddWithValue("@CategoriaID",veiculo.CategoriaID);
+                        command.Parameters.AddWithValue("@CategoriaID", veiculo.CategoriaID);
                         command.Parameters.AddWithValue("@Placa", veiculo.Placa);
                         command.Parameters.AddWithValue("@Marca", veiculo.Marca);
                         command.Parameters.AddWithValue("@Modelo", veiculo.Modelo);
@@ -35,9 +38,8 @@ namespace Locadora.Controller
                         command.Parameters.AddWithValue("@StatusVeiculo", veiculo.StatusVeiculo);
 
                         command.ExecuteNonQuery();
-
                         transaction.Commit();
-                        
+
                     }
                     catch (SqlException ex)
                     {
@@ -124,7 +126,8 @@ namespace Locadora.Controller
                                                               reader.GetString(6)
                                                              );
                                 veiculo.SetVeiculoID(reader.GetInt32(0));
-
+                                categoriaController.BuscarCategoriaPorID(veiculo.CategoriaID).SetVeiculos(veiculo);
+                                veiculo.SetCategoria(categoriaController.BuscarCategoriaPorID(veiculo.CategoriaID));
                                 return veiculo;
                             }
                             return null;
@@ -167,6 +170,7 @@ namespace Locadora.Controller
                                                               reader.GetInt32(4),
                                                               reader.GetString(5)
                                                              );
+                                veiculo.SetCategoria(categoriaController.BuscarCategoriaPorID(veiculo.CategoriaID));
                                 veiculos.Add(veiculo);
 
                             }
@@ -185,7 +189,7 @@ namespace Locadora.Controller
             }
         }
 
-        public void AtualizarVeiculo(string statusVeiculo,string placa)
+        public void AtualizarVeiculo(string statusVeiculo, string placa)
         {
             var veiculoEncontrado = BuscarVeiculoPorPlaca(placa) ?? throw new Exception("Veículo não encontrado.");
 
@@ -240,7 +244,7 @@ namespace Locadora.Controller
                 {
 
 
-                    using (SqlCommand command = new SqlCommand(Veiculo.DELETEVEICULO, connection,transaction))
+                    using (SqlCommand command = new SqlCommand(Veiculo.DELETEVEICULO, connection, transaction))
                     {
                         try
                         {

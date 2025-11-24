@@ -21,10 +21,17 @@ namespace Locadora.Controller
 
         public FuncionarioController funcionarioController = new();
 
+        public CategoriaController categoriaController = new();
+
         public void AdicionarLocacao(Locacao locacao)
         {
             var clienteEncontrado = clienteController.BuscarClientePorID(locacao.ClienteID) ?? throw new Exception("Cliente não encontrado.");
             var veiculoEncontrado = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID) ?? throw new Exception("Veículo não encontrado.");
+
+            Decimal diaria = categoriaController.BuscarCategoriaPorID(veiculoController.BuscarVeiculoPorID(locacao.VeiculoID).CategoriaID).Diaria;
+
+            if (veiculoEncontrado.StatusVeiculo != "Disponível")
+                throw new Exception("Veículo está indisponível.");
 
             if (locacao.Status.ToString() != "Ativa")
                 throw new Exception("Locação já está finalizada.");
@@ -44,12 +51,13 @@ namespace Locadora.Controller
                             command.Parameters.AddWithValue("@DataLocacao", locacao.DataLocacao);
                             command.Parameters.AddWithValue("@DataDevolucaoPrevista", locacao.DataDevolucaoPrevista);
                             command.Parameters.AddWithValue("@DataDevolucaoReal", (object?)locacao.DataDevolucaoReal ?? DBNull.Value);
-                            command.Parameters.AddWithValue("@ValorDiaria", locacao.ValorDiaria);
-                            command.Parameters.AddWithValue("@ValorTotal", locacao.ValorTotal);
+                            command.Parameters.AddWithValue("@ValorDiaria", diaria);
+                            command.Parameters.AddWithValue("@ValorTotal", locacao.DiasParaRetornar * diaria);
                             command.Parameters.AddWithValue("@Multa", locacao.Multa);
                             command.Parameters.AddWithValue("@Status", locacao.Status.ToString());
 
                             command.ExecuteNonQuery();
+                            veiculoController.AtualizarVeiculo("Alugado", veiculoEncontrado.Placa);
                             transaction.Commit();
                         }
                     }
@@ -180,6 +188,7 @@ namespace Locadora.Controller
             var funcionarioEncontrado = funcionarioController.BuscarFuncionarioPorCPF(cpf) ?? throw new Exception("Funcionário não encontrado.");
             var locacaoEncontrada = BuscarLocacaoPorId(idLocacao) ?? throw new Exception("Locação não encontrada.");
 
+
             using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
                 connection.Open();
@@ -215,6 +224,7 @@ namespace Locadora.Controller
         public void FinalizarLocacao(int idLocacao)
         {
             var locacaoEncontrada = BuscarLocacaoPorId(idLocacao) ?? throw new Exception("Locação não encontrada.");
+            var veiculoEncontrado = veiculoController.BuscarVeiculoPorID(locacaoEncontrada.VeiculoID);
 
             if (locacaoEncontrada.Status.ToString() != "Ativa")
                 throw new Exception("Locação já está finalizada.");
@@ -231,6 +241,7 @@ namespace Locadora.Controller
                         {
                             command.Parameters.AddWithValue("@idLocacao", idLocacao);
                             command.ExecuteNonQuery();
+                            veiculoController.AtualizarVeiculo("Disponível", veiculoEncontrado.Placa);
                             transaction.Commit();
                         }
                     }
@@ -309,8 +320,8 @@ namespace Locadora.Controller
                         return locacoesDict.Values.ToList();
 
                     }
-                        
-                    
+
+
                 }
 
 
@@ -502,7 +513,7 @@ namespace Locadora.Controller
                                         (int)reader["ClienteID"],
                                         (int)reader["VeiculoID"],
                                         Convert.ToDateTime(reader["DataLocacao"]),
-                                        reader["DataDevolucaoReal"] != DBNull.Value ? 
+                                        reader["DataDevolucaoReal"] != DBNull.Value ?
                                         Convert.ToDateTime(reader["DataDevolucaoReal"]) : null,
                                         Convert.ToDateTime(reader["DataDevolucaoPrevista"]),
                                         Convert.ToDecimal(reader["ValorDiaria"]),

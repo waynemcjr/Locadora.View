@@ -90,9 +90,11 @@ namespace Locadora.Models
 
         public DateTime DataDevolucaoPrevista { get; private set; }
 
-        public DateTime? DataDevolucaoReal {get;private set; }
+        public DateTime? DataDevolucaoReal { get; private set; }
 
         public decimal ValorDiaria { get; private set; }
+
+        public int DiasParaRetornar { get; private set; }
 
         public decimal ValorTotal { get; private set; }
 
@@ -102,13 +104,12 @@ namespace Locadora.Models
 
         public List<Funcionario> Funcionarios { get; private set; }
 
-        public Locacao(int clienteID, int veiculoID, decimal valorDiaria, int diasParaRetornar)
+        public Locacao(int clienteID, int veiculoID, int diasParaRetornar)
         {
             this.ClienteID = clienteID;
             this.VeiculoID = veiculoID;
-            this.DataLocacao = DateTime.UtcNow;
-            this.ValorDiaria = valorDiaria;
-            this.ValorTotal = valorDiaria * diasParaRetornar;
+            this.DataLocacao = DateTime.Now;
+            this.DiasParaRetornar = diasParaRetornar;
             this.Multa = 0;
             this.DataDevolucaoPrevista = DateTime.Now.AddDays(diasParaRetornar);
             this.DataDevolucaoReal = null;
@@ -123,7 +124,7 @@ namespace Locadora.Models
             LocacaoID = locacaoID;
             ClienteID = clienteID;
             VeiculoID = veiculoID;
-            DataLocacao = dataLocacao; 
+            DataLocacao = dataLocacao;
             DataDevolucaoReal = dataDevolucaoReal;
             DataDevolucaoPrevista = dataDevolucaoPrevista;
             ValorDiaria = valorDiaria;
@@ -170,14 +171,14 @@ namespace Locadora.Models
                           $"Valor Total: {(this.ValorTotal + this.Multa):C}\n" +
                           $"Status: {this.Status}\n\n" +
                           $"Funcionários associados:\n";
-                          foreach(Funcionario f in this.Funcionarios)
-                          {
-                            result += $"    {f.Nome} => ";
-                            result += $"'{f.Email}'\n";
-                          }
-                          if (this.Funcionarios.Count == 0)
-                              result += "   Nenhum funcionário associado.\n";
-                          return result;
+            foreach (Funcionario f in this.Funcionarios)
+            {
+                result += $"    {f.Nome} => ";
+                result += $"'{f.Email}'\n";
+            }
+            if (this.Funcionarios.Count == 0)
+                result += "   Nenhum funcionário associado.\n";
+            return result;
 
         }
     }

@@ -41,32 +41,32 @@ namespace Locadora.View.Menus
                                 if (int.TryParse(Console.ReadLine(), out int idVeiculo))
                                 {
 
-                                    Console.Write("Digite o valor da diária: ");
-                                    if (Double.TryParse(Console.ReadLine(), out double valorDiaria))
-                                    {
+                                    //Console.Write("Digite o valor da diária: ");
+                                    //if (Double.TryParse(Console.ReadLine(), out double valorDiaria))
+                                    //{
 
-                                        Console.Write("Digite o número de dias para finalizar a locação: ");
-                                        if (int.TryParse(Console.ReadLine(), out int diasParaFinalizar))
+                                    Console.Write("Digite o número de dias para finalizar a locação: ");
+                                    if (int.TryParse(Console.ReadLine(), out int diasParaFinalizar))
+                                    {
+                                        try
                                         {
-                                            try
-                                            {
-                                                locacaoController.AdicionarLocacao(new Locacao(idCliente, idVeiculo, (Decimal)valorDiaria, diasParaFinalizar));
-                                                PositiveMessage("LOCAÇÃO CADASTRADA COM SUCESSO!");
-                                            }
-                                            catch (Exception e)
-                                            {
-                                                ErrorMessage(e.ToString());
-                                            }
+                                            locacaoController.AdicionarLocacao(new Locacao(idCliente, idVeiculo, diasParaFinalizar));
+                                            PositiveMessage("LOCAÇÃO CADASTRADA COM SUCESSO!");
                                         }
-                                        else
+                                        catch (Exception e)
                                         {
-                                            ErrorMessage("DIGITE O NÚMERO DE DIAS PARA FINALIZAR A LOCAÇÃO CORRETAMENTE!");
+                                            ErrorMessage(e.ToString());
                                         }
                                     }
                                     else
                                     {
-                                        ErrorMessage("DIGITE O VALOR DA DIÁRIA CORRETAMENTE!");
+                                        ErrorMessage("DIGITE O NÚMERO DE DIAS PARA FINALIZAR A LOCAÇÃO CORRETAMENTE!");
                                     }
+                                    //}
+                                    //else
+                                    //{
+                                    //    ErrorMessage("DIGITE O VALOR DA DIÁRIA CORRETAMENTE!");
+                                    //}
                                 }
                                 else
                                 {

@@ -188,18 +188,18 @@ var funcionarioController = new FuncionarioController();
 //    Console.WriteLine("Erro " + ex.Message);
 //}
 
-//try
-//{
-//    var listaFuncionario = funcionarioController.ListarTodosFuncionarios();
+try
+{
+    var listaFuncionario = funcionarioController.ListarTodosFuncionarios();
 
-//    foreach (var funcionarios in listaFuncionario)
-//    {
-//        Console.WriteLine(funcionarios);
-//    }
-//}
-//catch(Exception ex)
-//{
-//    Console.WriteLine("Erro " + ex.Message);
-//}
+    foreach (var funcionarios in listaFuncionario)
+    {
+        Console.WriteLine(funcionarios);
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Erro " + ex.Message);
+}
 
 #endregion

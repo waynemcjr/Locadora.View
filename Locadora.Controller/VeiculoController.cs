@@ -5,7 +5,7 @@ using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Locadora.Controller.Intefaces;
+using Locadora.Controller.Interfaces;
 using Locadora.Models;
 using Microsoft.Data.SqlClient;
 using Utils.Databases;

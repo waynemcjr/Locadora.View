@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Locadora.Models;
+﻿using Locadora.Models;
 
-namespace Locadora.Controller.Intefaces
+namespace Locadora.Controller.Interfaces
 {
     public interface IVeiculoController
     {

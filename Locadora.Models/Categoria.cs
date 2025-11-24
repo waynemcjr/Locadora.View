@@ -29,6 +29,11 @@ namespace Locadora.Models
         public readonly static string DELETECATEGORIA = @"DELETE FROM tblCategorias
                                                                WHERE CategoriaID = @idCategoria;";
 
+        public readonly static string SELECTVEICULOSPORCATEGORIAID = @"SELECT c.CategoriaID, c.Nome,c.Descricao,c.Diaria,
+                                                                              v.VeiculoID,v.Placa,v.Marca,v.Modelo,v.Ano, v.StatusVeiculo
+                                                                       FROM tblVeiculos v
+                                                                       JOIN tblCategorias c ON c.CategoriaID = v.CategoriaID
+                                                                       WHERE c.CategoriaID = @idCategoria;";
 
         public int CategoriaID { get; set; }
 
@@ -38,7 +43,7 @@ namespace Locadora.Models
 
         public decimal Diaria { get; private set; }
 
-        public List<Veiculo> Veiculos { get; private set; }
+        public List<Veiculo> Veiculos { get; private set; } = new List<Veiculo>();
 
         public Categoria(string nome, decimal diaria)
         {
@@ -63,9 +68,23 @@ namespace Locadora.Models
 
         public override string ToString()
         {
-            return $"Nome: {this.Nome}\n" +
-                    $"Descrição: {this.Descricao}\n" +
-                    $"Diária: {this.Diaria}";
+            string stringCompleta = $"Nome: {this.Nome}\n" +
+                            $"Descrição: {this.Descricao}\n" +
+                            $"Diária: {this.Diaria}\n" +
+                            "Veículos associados: \n";
+
+            foreach (Veiculo v in this.Veiculos)
+            {
+                stringCompleta += $"    {v.Modelo} => {v.Placa}\n";
+            }
+
+            if (this.Veiculos.Count < 1)
+            {
+                stringCompleta += " Nenhum veículo associado à essa categoria.";
+            }
+
+            return stringCompleta;
+
         }
 
     }

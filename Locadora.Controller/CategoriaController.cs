@@ -137,6 +137,64 @@ namespace Locadora.Controller
             }
         }
 
+        public Categoria ListarVeiculosPorCategoria(int idCategoria)
+        {
+            var categoriaEncontrada = BuscarCategoriaPorID(idCategoria) ?? throw new Exception("Categoria não encontrada.");
+
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        SqlCommand command = new SqlCommand(Categoria.SELECTVEICULOSPORCATEGORIAID, connection, transaction);
+
+                        command.Parameters.AddWithValue("idCategoria", idCategoria);
+
+                        SqlDataReader reader = command.ExecuteReader();
+                        Categoria categoria1 = null;
+
+                        while (reader.Read())
+                        {
+                            if (categoria1 is null)
+                            {
+                                categoria1 = new Categoria(reader["Nome"].ToString(),
+                                                          reader["Descricao"] != DBNull.Value ?
+                                                          reader["Descricao"].ToString() : null,
+                                                          (Decimal)reader["Diaria"]);
+                            }
+
+
+                            categoria1.SetVeiculos(new Veiculo((int)reader["CategoriaID"],
+                                                               reader["Placa"].ToString(),
+                                                               reader["Marca"].ToString(),
+                                                               reader["Modelo"].ToString(),
+                                                               (int)reader["Ano"],
+                                                               reader["StatusVeiculo"].ToString()
+                                                            ));
+                        }
+                        reader.Close();
+                        transaction.Commit();
+                        return categoria1;
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao listar categorias: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao listar categorias: " + e.Message);
+                    }
+                }
+            }
+            Categoria categoria = null;
+
+        }
+
         public void AtualizarCategoriaPorID(int id, Categoria categoria)
         {
             using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
@@ -153,8 +211,8 @@ namespace Locadora.Controller
 
                         command.Parameters.AddWithValue("@CategoriaID", categoria.CategoriaID);
                         command.Parameters.AddWithValue("@Nome", categoria.Nome);
-                        
-                        if(categoria.Descricao is null)
+
+                        if (categoria.Descricao is null)
                             command.Parameters.AddWithValue("@Descricao", "");
                         else
                             command.Parameters.AddWithValue("@Descricao", categoria.Descricao);
@@ -205,6 +263,3 @@ namespace Locadora.Controller
         }
     }
 }
-
-    
-

@@ -120,6 +120,29 @@ namespace Locadora.View.Menus
                             Console.Read();
                             break;
                         case 4:
+                            Console.Clear();
+                            Console.WriteLine("---------------| LISTA DE VEÍCULOS POR CATEGORIA |---------------");
+                            Console.Write("Digite o ID da categoria: ");
+                            if (!int.TryParse(Console.ReadLine(), out int idCategoriaLista))
+                            {
+                                ErrorMessage("DIGITE O ID DA CATEGORIA CORRETAMENTE");
+                            }
+
+                            try
+                            {
+                                Console.WriteLine("");
+                                Categoria categoria = categoriaController.ListarVeiculosPorCategoria(idCategoriaLista);
+                                Console.WriteLine(categoria);
+                                if (categoria is null)
+                                    Console.WriteLine("Essa categoria não está cadastrada.");
+                            }
+                            catch (Exception e)
+                            {
+                                ErrorMessage(e.ToString());
+                            }
+
+                            AlertMessage("Pressione qualquer tecla para voltar à GERENCIAR CATEGORIAS E VEÍCULOS.");
+                            Console.Read();
                             break;
                         case 5:
                             Console.Clear();

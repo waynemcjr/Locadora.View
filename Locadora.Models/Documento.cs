@@ -8,34 +8,48 @@ namespace Locadora.Models
 {
     public class Documento
     {
-        public static readonly string INSERTDOCUMENTO = "INSERT INTO tblDocumentos (ClienteID, TipoDocumento, Numero, DataEmissao, DataValidade) " +
-                                                        "VALUES (@ClienteID, @TipoDocumento, @Numero, @DataEmissao, @DataValidade);";
+        public readonly static string INSERTDOCUMENTO = "INSERT INTO tblDocumentos(ClienteID,TipoDocumento,Numero,DataEmissao,DataValidade) " +
+                                                                     "VALUES (@ClienteID,@TipoDocumento,@Numero,@DataEmissao,@DataValidade);";
 
-        public static readonly string UPDATEDOCUMENTO = "UPDATE tblDocumentos SET TipoDocumento = @TipoDocumento, Numero = @Numero, DataEmissao = @DataEmissao, DataValidade = @DataValidade WHERE ClienteID = @IdCliente";
+        public static readonly string UPDATEDOCUMENTO = @"UPDATE tblDocumentos
+                                                          SET TipoDocumento = @TipoDocumento,
+                                                              Numero = @Numero,
+                                                              DataEmissao = @DataEmissao,
+                                                              DataValidade = @DataValidade
+                                                          WHERE ClienteID = @idCliente;";
 
-        public int DocumentoID { get; private set; }
+        public int DoumentoID { get; private set; }
+
         public int ClienteID { get; private set; }
+
         public string TipoDocumento { get; private set; }
-        public string Numero { get; private set; }  
-        public DateOnly DataEmissao { get; private set; }
-        public DateOnly DataValidade { get; private set; }
 
-        public Documento(string tipoDocumento, string numero, DateOnly dataEmissao, DateOnly dataValidade)
+        public string Numero { get; private set; }
+
+        public DateTime DataEmissao { get; private set; }
+
+        public DateTime DataValidade { get; private set; }
+
+        public Documento(string tipoDocumento, string numero, DateTime dataEmissao, DateTime dataValidade)
         {
-            TipoDocumento = tipoDocumento;
-            Numero = numero;
-            DataEmissao = dataEmissao;
-            DataValidade = dataValidade;
+            this.TipoDocumento = tipoDocumento;
+            this.Numero = numero;
+            this.DataEmissao = dataEmissao;
+            this.DataValidade = dataValidade;
         }
 
-        public void setClienteID(int clienteID)
+        public void SetClienteID(int clienteID)
         {
-            ClienteID = clienteID;
+            this.ClienteID = clienteID;
         }
 
-        public override string? ToString()
+        public override string ToString()
         {
-            return $"Tipo: {TipoDocumento}\nNumero: {Numero}\nData de Emissão: {DataEmissao}\nData de Validade: {DataValidade}\n";
+            return $"Tipo: {this.TipoDocumento}\n" +
+                $"Numero: {this.Numero}\n" +
+                $"Data de Emissão: {this.DataEmissao}\n" +
+                $"Data de Validade: {this.DataValidade}";
         }
+
     }
 }

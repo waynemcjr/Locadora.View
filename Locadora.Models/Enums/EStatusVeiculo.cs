@@ -12,5 +12,6 @@ namespace Locadora.Models.Enums
         Alugado,
         Manutencao,
         Reservado
+
     }
 }

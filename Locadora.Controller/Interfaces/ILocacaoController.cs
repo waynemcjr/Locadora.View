@@ -2,14 +2,23 @@
 
 namespace Locadora.Controller.Interfaces
 {
-    internal interface ILocacaoController
+    public interface ILocacaoController
     {
-        public void AdicionarLocacao(Locacao locacao, int funcionarioID);
+        public void AdicionarLocacao(Locacao locacao);
+
+        public void AssociarFuncionario(string cpf,int idLocacao);
+
+        public List<Locacao> ListarLocacoesAivas();
+
+        public void FinalizarLocacao(int idLocacao);
+
+        public List<Locacao> ListarLocacaoPorCliente(string email);
+
+        public List<Locacao> ListarLocacaoPorFuncionario(string cpf);
+
+        public List<Funcionario> ListarFuncionariosDeUmaLocacao(int idLocacao);
 
         public List<Locacao> ListarTodasLocacoes();
 
-        public Locacao BuscarLocacaoPorID(int id);
-
-        public void FinalizarLocacao(int locacaoID, decimal multa);
     }
 }

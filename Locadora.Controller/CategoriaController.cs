@@ -1,245 +1,210 @@
-﻿using System;
+﻿using Locadora.Models;
+using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
-using Locadora.Models;
-using Microsoft.Data.SqlClient;
-using Microsoft.IdentityModel.Tokens;
 using Utils.Databases;
 
 namespace Locadora.Controller
 {
     public class CategoriaController
     {
+
         public void AdicionarCategoria(Categoria categoria)
         {
-            SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString());
-            connection.Open();
-            using (SqlTransaction transaction = connection.BeginTransaction())
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
-                try
-                {
-                    SqlCommand command = new SqlCommand(Categoria.INSERTCATEGORIA, connection, transaction);
+                connection.Open();
 
-                    command.Parameters.AddWithValue("@Nome", categoria.Nome);
-                    command.Parameters.AddWithValue("@Descricao", categoria.Descricao ?? (object)DBNull.Value);
-                    command.Parameters.AddWithValue("@Diaria", categoria.Diaria);
-
-                    int id = Convert.ToInt32(command.ExecuteScalar());
-
-                    categoria.setCategoriaID(id);
-
-                    transaction.Commit();
-                }
-                catch (SqlException ex)
+                using (SqlTransaction transaction = connection.BeginTransaction())
                 {
-                    transaction.Rollback();
-                    Console.WriteLine("Erro ao adicionar categoria " + ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    Console.WriteLine("Erro inesperado ao adicionar categoria " + ex.Message);
-                }
-                finally
-                {
-                    connection.Close();
+                    try
+                    {
+                        using SqlCommand command = new(Categoria.INSERTCATEGORIA, connection, transaction);
+                        command.Parameters.AddWithValue("@Nome", categoria.Nome);
+                        command.Parameters.AddWithValue("@Descricao", categoria.Descricao);
+                        command.Parameters.AddWithValue("@Diaria", categoria.Diaria);
+
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao adicionar categoria: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao adicionar categoria: " + e.Message);
+                    }
                 }
             }
+
+
+        }
+
+        public Categoria BuscarCategoriaPorID(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        SqlCommand command = new SqlCommand(Categoria.SELECTCATEGORIAPORID, connection, transaction);
+                        command.Parameters.AddWithValue("@idCategoria", id);
+
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+
+                                var categoria = new Categoria(reader["Nome"].ToString(),
+                                                          reader["Descricao"] != DBNull.Value ?
+                                                          reader["Descricao"].ToString() : null,
+                                                          (Decimal)reader["Diaria"]);
+
+                                categoria.SetCategoriaID(id);
+
+                                reader.Close();
+                                transaction.Commit();
+                                return categoria;
+                            }
+
+                        }
+                        return null;
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao buscar categoria: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao buscar categoria: " + e.Message);
+                    }
+                }
+            }
+            return null;
         }
 
         public List<Categoria> ListarTodasCategorias()
         {
-            var connection = new SqlConnection(ConnectionDB.GetConnectionString());
-
-            connection.Open();
-            try
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
-                var command = new SqlCommand(Categoria.SELECTALLCATEGORIA, connection);
+                connection.Open();
 
-                SqlDataReader reader = command.ExecuteReader();
-
-                List<Categoria> listaCategoria = new List<Categoria>();
-
-                while (reader.Read())
+                using (SqlTransaction transaction = connection.BeginTransaction())
                 {
-                    var categoria = new Categoria(
-                                                    reader["Nome"].ToString(),
-                                                    reader["Descricao"] != DBNull.Value ?
-                                                    reader["Descricao"].ToString() : null,
-                                                    Convert.ToDecimal(reader["Diaria"])
-                                                 );
-                    categoria.setCategoriaID(Convert.ToInt32(reader["CategoriaID"]));
+                    try
+                    {
+                        SqlCommand command = new SqlCommand(Categoria.SELECTTODASCATEGORIAS, connection, transaction);
+                        SqlDataReader reader = command.ExecuteReader();
 
-                    listaCategoria.Add(categoria);
+                        List<Categoria> categorias = [];
+
+                        while (reader.Read())
+                        {
+
+                            var categoria = new Categoria(reader["Nome"].ToString(),
+                                                          reader["Descricao"] != DBNull.Value ?
+                                                          reader["Descricao"].ToString() : null,
+                                                          (Decimal)reader["Diaria"]);
+
+                            categorias.Add(categoria);
+                        }
+                        reader.Close();
+                        transaction.Commit();
+                        return categorias;
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao listar categorias: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao listar categorias: " + e.Message);
+                    }
                 }
-                return listaCategoria;
-            }
-            catch (SqlException ex)
-            {
-                throw new Exception("Não foi possível listar todas categorias " + ex.Message);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Erro inesperado ao listar todas categorias " + ex.Message);
-            }
-            finally
-            {
-                connection.Close();
             }
         }
 
-        public Categoria BuscarCategoriaPorNome(string nome)
+        public void AtualizarCategoriaPorID(int id, Categoria categoria)
         {
-            var connection = new SqlConnection(ConnectionDB.GetConnectionString());
-            connection.Open();
-            try
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
-                var command = new SqlCommand(Categoria.BUSCARCATEGORIAPORNOME, connection);
+                connection.Open();
 
-                command.Parameters.AddWithValue("@Nome", nome);
-
-                SqlDataReader reader = command.ExecuteReader();
-
-                if (reader.Read())
+                using (SqlTransaction transaction = connection.BeginTransaction())
                 {
-                    var categoria = new Categoria(
-                                                    reader["Nome"].ToString(),
-                                                    reader["Descricao"] != DBNull.Value ?
-                                                    reader["Descricao"].ToString() : null,
-                                                    Convert.ToDecimal(reader["Diaria"])
-                                                 );
-                    categoria.setCategoriaID(Convert.ToInt32(reader["CategoriaID"]));
-                    return categoria;
+                    var categoriaExistente = BuscarCategoriaPorID(id) ?? throw new Exception("Categoria não encontrada!");
+
+                    try
+                    {
+                        using SqlCommand command = new(Categoria.UPDATECATEGORIA, connection, transaction);
+
+                        command.Parameters.AddWithValue("@CategoriaID", categoria.CategoriaID);
+                        command.Parameters.AddWithValue("@Nome", categoria.Nome);
+                        
+                        if(categoria.Descricao is null)
+                            command.Parameters.AddWithValue("@Descricao", "");
+                        else
+                            command.Parameters.AddWithValue("@Descricao", categoria.Descricao);
+                        command.Parameters.AddWithValue("@Diaria", categoria.Diaria);
+
+                        command.Parameters.AddWithValue("@idCategoria", id);
+
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao atualizar categoria: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao atualizar categoria: " + e.Message);
+                    }
                 }
-                else
-                    return null;
-            }
-            catch (SqlException ex)
-            {
-                throw new Exception("Erro ao buscar categoria " + ex.Message);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Erro inesperado ao buscar categoria " + ex.Message);
-            }
-            finally
-            {
-                connection.Close();
             }
         }
 
-        public void AtualizarDiariaCategoria(string nome, decimal diaria)
+        public void DeletarCategoriaPorID(int id, SqlConnection connection, SqlTransaction transaction)
         {
-            var connection = new SqlConnection(ConnectionDB.GetConnectionString());
-            connection.Open();
 
-            var categoriaEncontrada = this.BuscarCategoriaPorNome(nome);
-            categoriaEncontrada.setDiaria(diaria);
+            var categoriaExistente = BuscarCategoriaPorID(id) ?? throw new Exception("Categoria não encontrada!");
 
-            if (categoriaEncontrada is null)
-                throw new Exception("Não foi encontrado uma categoria com esse nome!");
-
-            using (SqlTransaction transaction = connection.BeginTransaction())
+            try
             {
-                try
+                using (SqlCommand command = new SqlCommand(Categoria.DELETECATEGORIA, connection, transaction))
                 {
-                    var command = new SqlCommand(Categoria.UPDATECATEGORIA, connection, transaction);
 
-                    command.Parameters.AddWithValue("@Nome", categoriaEncontrada.Nome);
-                    command.Parameters.AddWithValue("@Diaria", categoriaEncontrada.Diaria);
+                    command.Parameters.AddWithValue("@idCategoria", id);
                     command.ExecuteNonQuery();
 
-                    transaction.Commit();
                 }
-                catch (SqlException ex)
-                {
-                    transaction.Rollback();
-                    Console.WriteLine("Erro ao atualizar categoria " + ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    Console.WriteLine("Erro inesperado ao atualizar categoria " + ex.Message);
-                }
-                finally
-                {
-                    connection.Close();
-                }
-            }
-        }
-
-        public void DeletarCategoria(string nome)
-        {
-            var connection = new SqlConnection(ConnectionDB.GetConnectionString());
-            connection.Open();
-
-            var categoriaEncontrada = this.BuscarCategoriaPorNome(nome);
-
-            if (categoriaEncontrada is null)
-                throw new Exception("Não foi possível encontrar essa categoria!");
-
-            using (SqlTransaction transaction = connection.BeginTransaction())
-            {
-                try
-                {
-                    var command = new SqlCommand(Categoria.DELETECATEGORIA, connection, transaction);
-
-                    command.Parameters.AddWithValue("@IdCategoria", categoriaEncontrada.CategoriaID);
-                    command.ExecuteNonQuery();
-
-                    transaction.Commit();
-                }
-                catch (SqlException ex)
-                {
-                    transaction.Rollback();
-                    Console.WriteLine("Erro ao deletar categoria " + ex.Message);
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    Console.WriteLine("Erro inesperado ao deletar categoria " + ex.Message);
-                }
-                finally
-                {
-                    connection.Close();
-                }
-            }
-        }
-
-        public string BuscarNomeCategoriaPorId(int id)
-        {
-            var connection = new SqlConnection(ConnectionDB.GetConnectionString());
-            connection.Open();
-
-            try
-            {
-                SqlCommand command = new SqlCommand(Categoria.SELECTNOMECATEGORIAPORID, connection);
-                command.Parameters.AddWithValue("@Id", id);
-
-                string nomecategoria = String.Empty;
-
-                SqlDataReader reader = command.ExecuteReader();
-                if (reader.Read())
-                {
-                    nomecategoria = reader["Nome"].ToString() ?? string.Empty;
-                }
-                return nomecategoria;
             }
             catch (SqlException ex)
             {
-                throw new Exception("Erro ao buscar categoria." + ex.Message);
+                throw new Exception("Erro ao deletar categoria: " + ex.Message);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                throw new Exception("Erro inesperado ao buscar categoria." + ex.Message);
-            }
-            finally
-            {
-                connection.Close();
+                throw new Exception("Erro inesperado ao deletar categoria: " + e.Message);
             }
         }
     }
 }
+
+    
+

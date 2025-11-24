@@ -1,14 +1,7 @@
 ﻿using Locadora.Controller.Interfaces;
 using Locadora.Models;
 using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 using Utils.Databases;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Locadora.Controller
 {
@@ -100,9 +93,9 @@ namespace Locadora.Controller
                     {
                         List<Funcionario> funcionarios = new List<Funcionario>();
 
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        using(SqlDataReader reader = command.ExecuteReader())
                         {
-                            while (reader.Read())
+                            while(reader.Read())
                             {
                                 funcionarios.Add(new Funcionario(reader["Nome"].ToString(),
                                                                  reader["CPF"].ToString(),
@@ -114,7 +107,7 @@ namespace Locadora.Controller
                             return funcionarios;
                         }
                     }
-                    return null;
+                    
                 }
                 catch (SqlException ex)
                 {

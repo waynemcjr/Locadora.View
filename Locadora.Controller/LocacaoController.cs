@@ -2,179 +2,550 @@
 using Locadora.Models;
 using Locadora.Models.Enums;
 using Microsoft.Data.SqlClient;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Utils.Databases;
 
 namespace Locadora.Controller
 {
     public class LocacaoController : ILocacaoController
     {
-        private readonly ClienteController ClienteController = new ClienteController();
-        private readonly VeiculoController VeiculoController = new VeiculoController();
 
-        public void AdicionarLocacao(Locacao locacao, int funcionarioID)
+        public ClienteController clienteController = new();
+
+        public VeiculoController veiculoController = new();
+
+        public FuncionarioController funcionarioController = new();
+
+        public void AdicionarLocacao(Locacao locacao)
         {
-            using SqlConnection connection = new(ConnectionDB.GetConnectionString());
-            connection.Open();
+            var clienteEncontrado = clienteController.BuscarClientePorID(locacao.ClienteID) ?? throw new Exception("Cliente não encontrado.");
+            var veiculoEncontrado = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID) ?? throw new Exception("Veículo não encontrado.");
 
-            using SqlTransaction transaction = connection.BeginTransaction();
-            try
+            if (locacao.Status.ToString() != "Ativa")
+                throw new Exception("Locação já está finalizada.");
+
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
-                using SqlCommand command = new(Locacao.INSERTLOCACAO + " SELECT SCOPE_IDENTITY();", connection, transaction);
+                connection.Open();
 
-                command.Parameters.AddWithValue("@ClienteID", locacao.ClienteID);
-                command.Parameters.AddWithValue("@VeiculoID", locacao.VeiculoID);
-                command.Parameters.AddWithValue("@DataLocacao", locacao.DataLocacao);
-                command.Parameters.AddWithValue("@DataDevolucaoPrevista", locacao.DataDevolucaoPrevista);
-                command.Parameters.AddWithValue("@DataDevolucaoReal", (object?)locacao.DataDevolucaoReal ?? DBNull.Value);
-                command.Parameters.AddWithValue("@ValorDiaria", locacao.ValorDiaria);
-                command.Parameters.AddWithValue("@ValorTotal", locacao.ValorTotal);
-                command.Parameters.AddWithValue("@Multa", (object?)locacao.Multa ?? DBNull.Value);
-                command.Parameters.AddWithValue("@Status", locacao.Status.ToString());
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlCommand command = new SqlCommand(Locacao.INSERTLOCACAO, connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@idCliente", locacao.ClienteID);
+                            command.Parameters.AddWithValue("@idVeiculo", locacao.VeiculoID);
+                            command.Parameters.AddWithValue("@DataLocacao", locacao.DataLocacao);
+                            command.Parameters.AddWithValue("@DataDevolucaoPrevista", locacao.DataDevolucaoPrevista);
+                            command.Parameters.AddWithValue("@DataDevolucaoReal", (object?)locacao.DataDevolucaoReal ?? DBNull.Value);
+                            command.Parameters.AddWithValue("@ValorDiaria", locacao.ValorDiaria);
+                            command.Parameters.AddWithValue("@ValorTotal", locacao.ValorTotal);
+                            command.Parameters.AddWithValue("@Multa", locacao.Multa);
+                            command.Parameters.AddWithValue("@Status", locacao.Status.ToString());
 
-                int locacaoID = Convert.ToInt32(command.ExecuteScalar());
-                locacao.SetLocacaoID(locacaoID);
-
-                using SqlCommand commandFuncionario = new(Locacao.INSERTFUNCIONARIOLOCACAO, connection, transaction);
-
-                commandFuncionario.Parameters.AddWithValue("@LocacaoID", locacaoID);
-                commandFuncionario.Parameters.AddWithValue("@FuncionarioID", funcionarioID);
-                commandFuncionario.ExecuteNonQuery();
-
-                using SqlCommand cmdVeiculo = new(Locacao.SETVEICULOINDISPONIVEL, connection, transaction);
-                cmdVeiculo.Parameters.AddWithValue("@id", locacao.VeiculoID);
-                cmdVeiculo.ExecuteNonQuery();
-
-                transaction.Commit();
+                            command.ExecuteNonQuery();
+                            transaction.Commit();
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao alocar veículo: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao alocar veículo: " + e.Message);
+                    }
+                }
             }
-            catch (SqlException e)
+        }
+
+        public Locacao BuscarLocacaoPorId(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
-                transaction.Rollback();
-                throw new Exception("Erro ao adicionar locacao no BD: " + e.Message);
+                connection.Open();
+
+                try
+                {
+                    using (SqlCommand command = new SqlCommand(Locacao.SELECTLOCACAOPORID, connection))
+                    {
+
+                        command.Parameters.AddWithValue("@idLocacao", id);
+                        Locacao locacao = null;
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            List<Funcionario> funcionarios = [];
+                            while (reader.Read())
+                            {
+                                if (locacao == null)
+                                {
+                                    locacao = new Locacao((int)reader["LocacaoID"],
+                                                              (int)reader["ClienteID"],
+                                                              (int)reader["VeiculoID"],
+                                                              Convert.ToDateTime(reader["DataLocacao"]),
+                                                              reader["DataDevolucaoReal"] != (object)DBNull.Value ?
+                                                              Convert.ToDateTime(reader["DataDevolucaoReal"]) : null,
+                                                              Convert.ToDateTime(reader["DataDevolucaoPrevista"]),
+                                                              Convert.ToDecimal(reader["ValorDiaria"]),
+                                                              Convert.ToDecimal(reader["ValorTotal"]),
+                                                              Convert.ToDecimal(reader["Multa"]),
+                                                              (EStatusLocacao)Enum.Parse(typeof(EStatusLocacao), reader["Status"].ToString())
+                                                             );
+
+                                    if (locacao == null)
+                                        return null;
+
+                                    Cliente cliente = clienteController.BuscarClientePorID(locacao.ClienteID);
+                                    locacao.SetClienteNome(cliente.Nome);
+                                    locacao.SetClienteEmail(cliente.Email);
+
+                                    Veiculo veiculo = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
+                                    locacao.SetVeiculoModelo(veiculo.Modelo);
+                                    locacao.SetVeiculoPlaca(veiculo.Placa);
+
+                                }
+                                if (reader["CPF"] != DBNull.Value)
+                                {
+                                    funcionarios.Add(funcionarioController.BuscarFuncionarioPorCPF(reader["CPF"].ToString()));
+                                }
+
+                                locacao.SetFuncionarios(funcionarios);
+                            }
+                            return locacao;
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    throw new Exception("Erro ao buscar locação: " + ex.Message);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Erro inesperado ao buscar locação: " + e.Message);
+                }
             }
-            catch (Exception e)
+        }
+
+        public List<Funcionario> ListarFuncionariosDeUmaLocacao(int id)
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
-                transaction.Rollback();
-                throw new Exception("Erro desconhecido ao adicionar locacao: " + e.Message);
+                connection.Open();
+
+                try
+                {
+                    using (SqlCommand command = new SqlCommand(Locacao.SELECTFUNCIONARIOSDEUMALOCACAO, connection))
+                    {
+
+                        command.Parameters.AddWithValue("@idLocacao", id);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            List<Funcionario> funcionarios = [];
+                            while (reader.Read())
+                            {
+                                var funcionario = new Funcionario(reader["Nome"].ToString(),
+                                                                  reader["CPF"].ToString(),
+                                                                  reader["Email"].ToString(),
+                                                                  reader["Salario"] != (object)DBNull.Value ?
+                                                                  (Decimal)reader["Salario"] : null
+                                                                 );
+                                funcionarios.Add(funcionario);
+                            }
+                            return funcionarios;
+
+                        }
+                    }
+                }
+                catch (SqlException ex)
+                {
+                    throw new Exception("Erro ao listar funcionários da locação: " + ex.Message);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Erro inesperado ao listar funcionários da locação: " + e.Message);
+                }
+            }
+        }
+
+        public void AssociarFuncionario(string cpf, int idLocacao)
+        {
+            var funcionarioEncontrado = funcionarioController.BuscarFuncionarioPorCPF(cpf) ?? throw new Exception("Funcionário não encontrado.");
+            var locacaoEncontrada = BuscarLocacaoPorId(idLocacao) ?? throw new Exception("Locação não encontrada.");
+
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+
+                    try
+                    {
+                        using (SqlCommand command = new SqlCommand(Locacao.INSERTLOCACAOFUNCIONARIO, connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@idLocacao", idLocacao);
+                            command.Parameters.AddWithValue("@idFuncionario", funcionarioEncontrado.FuncionarioID);
+                            command.ExecuteNonQuery();
+                            transaction.Commit();
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao associar funcionário à locação: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao associar funcionário à locação: " + e.Message);
+                    }
+                }
+
+            }
+        }
+
+        public void FinalizarLocacao(int idLocacao)
+        {
+            var locacaoEncontrada = BuscarLocacaoPorId(idLocacao) ?? throw new Exception("Locação não encontrada.");
+
+            if (locacaoEncontrada.Status.ToString() != "Ativa")
+                throw new Exception("Locação já está finalizada.");
+
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        using (SqlCommand command = new SqlCommand(Locacao.UPDATELOCACAOPORID, connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@idLocacao", idLocacao);
+                            command.ExecuteNonQuery();
+                            transaction.Commit();
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro ao finalizar locação: " + ex.Message);
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        throw new Exception("Erro inesperado ao finalizar locação: " + e.Message);
+                    }
+                }
+            }
+        }
+
+        public List<Locacao> ListarLocacaoPorCliente(string email)
+        {
+            var clienteEncontrado = clienteController.BuscarClientePorEmail(email) ?? throw new Exception("Cliente não encontrado.");
+
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                try
+                {
+                    using (SqlCommand command = new SqlCommand(Locacao.SELECTLOCACAOPORCLIENTE, connection))
+                    {
+
+                        command.Parameters.AddWithValue("@idCliente", clienteEncontrado.ClienteID);
+                        Dictionary<int, Locacao> locacoesDict = new();
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+
+                                int locacaoID = (int)reader["LocacaoID"];
+
+                                if (!locacoesDict.TryGetValue(locacaoID, out Locacao locacao))
+                                {
+                                    locacao = new Locacao(
+                                        (int)reader["LocacaoID"],
+                                        (int)reader["ClienteID"],
+                                        (int)reader["VeiculoID"],
+                                        Convert.ToDateTime(reader["DataLocacao"]),
+                                        reader["DataDevolucaoReal"] != DBNull.Value ?
+                                        Convert.ToDateTime(reader["DataDevolucaoReal"]) : null,
+                                        Convert.ToDateTime(reader["DataDevolucaoPrevista"]),
+                                        Convert.ToDecimal(reader["ValorDiaria"]),
+                                        Convert.ToDecimal(reader["ValorTotal"]),
+                                        Convert.ToDecimal(reader["Multa"]),
+                                        (EStatusLocacao)Enum.Parse(typeof(EStatusLocacao), reader["Status"].ToString())
+                                    );
+
+                                    locacao.SetClienteNome(clienteEncontrado.Nome);
+                                    locacao.SetClienteEmail(clienteEncontrado.Email);
+
+                                    Veiculo veiculo = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
+                                    locacao.SetVeiculoModelo(veiculo.Modelo);
+                                    locacao.SetVeiculoPlaca(veiculo.Placa);
+
+                                    locacao.SetFuncionarios(new List<Funcionario>());
+
+                                    locacoesDict.Add(locacaoID, locacao);
+                                }
+
+                                if (reader["CPF"] != DBNull.Value)
+                                {
+                                    var funcionario = funcionarioController.BuscarFuncionarioPorCPF(reader["CPF"].ToString());
+                                    locacao.Funcionarios.Add(funcionario);
+                                }
+                            }
+                        }
+
+                        return locacoesDict.Values.ToList();
+
+                    }
+                        
+                    
+                }
+
+
+                catch (SqlException ex)
+                {
+                    throw new Exception("Erro ao listar locação por cliente: " + ex.Message);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Erro inesperado ao listar locação por cliente: " + e.Message);
+                }
+            }
+        }
+
+        public List<Locacao> ListarLocacaoPorFuncionario(string cpf)
+        {
+            var funcionarioEncontrado = funcionarioController.BuscarFuncionarioPorCPF(cpf) ?? throw new Exception("Funcionário não encontrado.");
+
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                try
+                {
+                    using (SqlCommand command = new SqlCommand(Locacao.SELECTLOCACAOPORFUNCIONARIO, connection))
+                    {
+
+                        command.Parameters.AddWithValue("@idFuncionario", funcionarioEncontrado.FuncionarioID);
+                        Dictionary<int, Locacao> locacoesDict = new();
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+
+                                int locacaoID = (int)reader["LocacaoID"];
+
+                                if (!locacoesDict.TryGetValue(locacaoID, out Locacao locacao))
+                                {
+                                    locacao = new Locacao(
+                                        (int)reader["LocacaoID"],
+                                        (int)reader["ClienteID"],
+                                        (int)reader["VeiculoID"],
+                                        Convert.ToDateTime(reader["DataLocacao"]),
+                                        reader["DataDevolucaoReal"] != DBNull.Value ?
+                                        Convert.ToDateTime(reader["DataDevolucaoReal"]) : null,
+                                        Convert.ToDateTime(reader["DataDevolucaoPrevista"]),
+                                        Convert.ToDecimal(reader["ValorDiaria"]),
+                                        Convert.ToDecimal(reader["ValorTotal"]),
+                                        Convert.ToDecimal(reader["Multa"]),
+                                        (EStatusLocacao)Enum.Parse(typeof(EStatusLocacao), reader["Status"].ToString())
+                                    );
+
+                                    Cliente cliente = clienteController.BuscarClientePorID(locacao.ClienteID);
+                                    locacao.SetClienteNome(cliente.Nome);
+                                    locacao.SetClienteEmail(cliente.Email);
+
+                                    Veiculo veiculo = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
+                                    locacao.SetVeiculoModelo(veiculo.Modelo);
+                                    locacao.SetVeiculoPlaca(veiculo.Placa);
+
+                                    locacao.SetFuncionarios(new List<Funcionario>());
+
+                                    locacoesDict.Add(locacaoID, locacao);
+                                }
+
+                                if (reader["CPF"] != DBNull.Value)
+                                {
+                                    var funcionario = funcionarioController.BuscarFuncionarioPorCPF(reader["CPF"].ToString());
+                                    locacao.Funcionarios.Add(funcionario);
+                                }
+                            }
+                        }
+
+                        return locacoesDict.Values.ToList();
+
+                    }
+
+
+                }
+
+
+                catch (SqlException ex)
+                {
+                    throw new Exception("Erro ao listar locação por funcionário: " + ex.Message);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Erro inesperado ao listar locação por funcionário: " + e.Message);
+                }
+            }
+        }
+
+        public List<Locacao> ListarLocacoesAivas()
+        {
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
+            {
+                connection.Open();
+
+                try
+                {
+                    using (SqlCommand command = new SqlCommand(Locacao.SELECTLOCAOESATIVAS, connection))
+                    {
+                        Dictionary<int, Locacao> locacoesDict = new();
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+
+                                int locacaoID = (int)reader["LocacaoID"];
+
+                                if (!locacoesDict.TryGetValue(locacaoID, out Locacao locacao))
+                                {
+                                    locacao = new Locacao(
+                                        (int)reader["LocacaoID"],
+                                        (int)reader["ClienteID"],
+                                        (int)reader["VeiculoID"],
+                                        Convert.ToDateTime(reader["DataLocacao"]),
+                                        reader["DataDevolucaoReal"] != DBNull.Value ?
+                                        Convert.ToDateTime(reader["DataDevolucaoReal"]) : null,
+                                        Convert.ToDateTime(reader["DataDevolucaoPrevista"]),
+                                        Convert.ToDecimal(reader["ValorDiaria"]),
+                                        Convert.ToDecimal(reader["ValorTotal"]),
+                                        Convert.ToDecimal(reader["Multa"]),
+                                        (EStatusLocacao)Enum.Parse(typeof(EStatusLocacao), reader["Status"].ToString())
+                                    );
+
+                                    Cliente cliente = clienteController.BuscarClientePorID(locacao.ClienteID);
+                                    locacao.SetClienteNome(cliente.Nome);
+                                    locacao.SetClienteEmail(cliente.Email);
+
+                                    Veiculo veiculo = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
+                                    locacao.SetVeiculoModelo(veiculo.Modelo);
+                                    locacao.SetVeiculoPlaca(veiculo.Placa);
+
+                                    locacao.SetFuncionarios(new List<Funcionario>());
+
+                                    locacoesDict.Add(locacaoID, locacao);
+                                }
+
+                                if (reader["CPF"] != DBNull.Value)
+                                {
+                                    var funcionario = funcionarioController.BuscarFuncionarioPorCPF(reader["CPF"].ToString());
+                                    locacao.Funcionarios.Add(funcionario);
+                                }
+                            }
+                        }
+
+                        return locacoesDict.Values.ToList();
+
+                    }
+
+
+                }
+
+
+                catch (SqlException ex)
+                {
+                    throw new Exception("Erro ao buscar locação: " + ex.Message);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Erro inesperado ao buscar locação: " + e.Message);
+                }
             }
         }
 
         public List<Locacao> ListarTodasLocacoes()
         {
-            List<Locacao> locacoes = [];
-
-            using SqlConnection connection = new(ConnectionDB.GetConnectionString());
-            connection.Open();
-
-            try
+            using (SqlConnection connection = new SqlConnection(ConnectionDB.GetConnectionString()))
             {
+                connection.Open();
 
-            using SqlCommand command = new(Locacao.SELECTALLLOCACOES, connection);
-
-            using SqlDataReader reader = command.ExecuteReader();
-
-                while (reader.Read())
+                try
                 {
-                    Locacao locacao = new(
-                        reader.GetInt32(0),
-                        reader.GetInt32(1),
-                        reader.GetInt32(2),
-                        reader.GetDateTime(3),
-                        reader.GetDateTime(4),
-                        reader.IsDBNull(5) ? null : reader.GetDateTime(5),
-                        reader.GetDecimal(6),
-                        reader.GetDecimal(7),
-                        reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                        Enum.Parse<EStatusLocacao>(reader.GetString(9)));
+                    using (SqlCommand command = new SqlCommand(Locacao.SELECTTODASLOCACOES, connection))
+                    {
+                        Dictionary<int, Locacao> locacoesDict = new();
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
 
-                    locacao.SetLocacaoID(reader.GetInt32(0));
+                                int locacaoID = (int)reader["LocacaoID"];
 
-                    var cliente = ClienteController.BuscarClientePorID(locacao.ClienteID);
-                    var veiculo = VeiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
+                                if (!locacoesDict.TryGetValue(locacaoID, out Locacao locacao))
+                                {
+                                    locacao = new Locacao(
+                                        (int)reader["LocacaoID"],
+                                        (int)reader["ClienteID"],
+                                        (int)reader["VeiculoID"],
+                                        Convert.ToDateTime(reader["DataLocacao"]),
+                                        reader["DataDevolucaoReal"] != DBNull.Value ? 
+                                        Convert.ToDateTime(reader["DataDevolucaoReal"]) : null,
+                                        Convert.ToDateTime(reader["DataDevolucaoPrevista"]),
+                                        Convert.ToDecimal(reader["ValorDiaria"]),
+                                        Convert.ToDecimal(reader["ValorTotal"]),
+                                        Convert.ToDecimal(reader["Multa"]),
+                                        (EStatusLocacao)Enum.Parse(typeof(EStatusLocacao), reader["Status"].ToString())
+                                    );
 
-                    locacao.SetCliente(cliente);
-                    locacao.SetVeiculo(veiculo);
+                                    Cliente cliente = clienteController.BuscarClientePorID(locacao.ClienteID);
+                                    locacao.SetClienteNome(cliente.Nome);
+                                    locacao.SetClienteEmail(cliente.Email);
 
-                    locacoes.Add(locacao);
+                                    Veiculo veiculo = veiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
+                                    locacao.SetVeiculoModelo(veiculo.Modelo);
+                                    locacao.SetVeiculoPlaca(veiculo.Placa);
+
+                                    locacao.SetFuncionarios(new List<Funcionario>());
+
+                                    locacoesDict.Add(locacaoID, locacao);
+                                }
+
+                                if (reader["CPF"] != DBNull.Value)
+                                {
+                                    var funcionario = funcionarioController.BuscarFuncionarioPorCPF(reader["CPF"].ToString());
+                                    locacao.Funcionarios.Add(funcionario);
+                                }
+                            }
+                        }
+
+                        return locacoesDict.Values.ToList();
+
+                    }
+
+
                 }
-                return locacoes;
-            }
-            catch (SqlException e)
-            {
-                throw new Exception("Erro ao listar locacoes no BD: " + e.Message);
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Erro desconhecido ao listar locacoes: " + e.Message);
-            }
-        }
-
-        public Locacao BuscarLocacaoPorID(int id)
-        {
-
-            using SqlConnection connection = new(ConnectionDB.GetConnectionString());
-            connection.Open();
-
-            using SqlCommand command = new(Locacao.SELECTLOCACAOPORID, connection);
-            command.Parameters.AddWithValue("@ID", id);
-
-            using SqlDataReader reader = command.ExecuteReader();
-
-            if (!reader.Read())
-                return null!;
-
-            Locacao locacao = new(
-                reader.GetInt32(0),
-                reader.GetInt32(1),
-                reader.GetInt32(2),
-                reader.GetDateTime(3),
-                reader.GetDateTime(4),
-                reader.IsDBNull(5) ? null : reader.GetDateTime(5),
-                reader.GetDecimal(6),
-                reader.GetDecimal(7),
-                reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                Enum.Parse<EStatusLocacao>(reader.GetString(9)));
-
-            locacao.SetLocacaoID(reader.GetInt32(0));
-
-            var cliente = ClienteController.BuscarClientePorID(locacao.ClienteID);
-            var veiculo = VeiculoController.BuscarVeiculoPorID(locacao.VeiculoID);
-
-            locacao.SetCliente(cliente);
-            locacao.SetVeiculo(veiculo);
-
-            return locacao;
-        }
-
-        public void FinalizarLocacao(int locacaoID, decimal multa)
-        {
-            using SqlConnection connection = new(ConnectionDB.GetConnectionString());
-            connection.Open();
-
-            using SqlTransaction transaction = connection.BeginTransaction();
-
-            try
-            {
-                using SqlCommand commandLocacao = new(Locacao.UPDATELOCACAOFINALIZACAO, connection, transaction);
-                commandLocacao.Parameters.AddWithValue("@data", DateTime.Now);
-                commandLocacao.Parameters.AddWithValue("@multa", multa);
-                commandLocacao.Parameters.AddWithValue("@id", locacaoID);
-                commandLocacao.ExecuteNonQuery();
-
-                using SqlCommand commandVeiculos = new(Locacao.UPDATEVEICULOSFINALIZACAO, connection, transaction);
-                commandVeiculos.Parameters.AddWithValue("@locacaoID", locacaoID);
-                commandVeiculos.ExecuteNonQuery();
-
-                transaction.Commit();
-            }
-            catch (SqlException e)
-            {
-                transaction.Rollback();
-                throw new Exception("Erro ao finalizar locacao no BD: " + e.Message);
-            }
-            catch (Exception e)
-            {
-                transaction.Rollback();
-                throw new Exception("Erro desconhecido ao finalizar locacao: " + e.Message);
+                catch (SqlException ex)
+                {
+                    throw new Exception("Erro ao listar locações: " + ex.Message);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Erro inesperado ao listar locações: " + e.Message);
+                }
             }
         }
     }

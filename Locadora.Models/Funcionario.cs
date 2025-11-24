@@ -23,17 +23,19 @@ namespace Locadora.Models
                                                                   WHERE FuncionarioID = @idFuncionario;";
 
         public readonly static string DELETEFUNCIONARIOPORCPF = @"DELETE FROM tblFuncionarios
-                                                                  WHERE FuncionarioID = @idFuncionario;";
+                                                                  WHERE FuncionarioID = @idFuncionario; ";
 
-        public int FuncionarioID { get; private set; }
+        public int FuncionarioID {  get; private set; }
 
-        public string Nome { get; private set; }
+        public string Nome { get; private set; }    
 
         public string CPF { get; private set; }
 
         public string Email { get; private set; }
 
         public decimal? Salario { get; private set; }
+
+        public List<Locacao> LocacoesGerenciadas { get; private set; }
 
         public Funcionario(string nome, string cPF, string email)
         {
@@ -42,9 +44,14 @@ namespace Locadora.Models
             this.Email = email;
         }
 
-        public Funcionario(string nome, string cPF, string email, decimal? salario) : this(nome, cPF, email)
+        public Funcionario(string nome,string cPF,string email,decimal? salario) : this(nome, cPF, email)
         {
             this.Salario = salario;
+        }
+
+        public void SetLocacoes(Locacao locacao)
+        {
+            this.LocacoesGerenciadas.Add(locacao);
         }
 
         public void SetFuncionarioID(int id)
@@ -58,7 +65,7 @@ namespace Locadora.Models
             return $"Nome: {this.Nome}\n" +
                 $"CPF: {this.CPF}\n" +
                 $"Email: {this.Email}\n" +
-                $"Salário: {this.Salario}\n";
+                $"Salário: {this.Salario}";
         }
     }
 }

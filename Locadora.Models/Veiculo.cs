@@ -1,71 +1,76 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Locadora.Models;
 
-namespace Locadora.Models
+public class Veiculo
 {
-    public class Veiculo
+    public static readonly string INSERTVEICULO =
+        @"INSERT INTO tblVeiculos (CategoriaID, Placa, Marca, Modelo, Ano, StatusVeiculo) 
+        VALUES (@CategoriaID, @Placa, @Marca, @Modelo, @Ano, @StatusVeiculo)";
+
+    public static readonly string SELECTALLVEICULOS =
+        @"SELECT CategoriaID, Placa, Marca, Modelo, Ano, StatusVeiculo 
+        FROM tblVeiculos";
+
+    public static readonly string SELECTVEICULOBYPLACA =
+        @"SELECT VeiculoID, CategoriaID, Placa, Marca, Modelo, Ano, StatusVeiculo 
+        FROM tblVeiculos
+        WHERE Placa = @Placa";
+
+    public static readonly string UPDATESTATUSVEICULO =
+        @"UPDATE tblVeiculos 
+        SET StatusVeiculo = @StatusVeiculo 
+        WHERE VeiculoID = @IdVeiculo";
+
+    public static readonly string DELETEVEICULO =
+        @"DELETE FROM tblVeiculos 
+        WHERE VeiculoID = @IdVeiculo";
+
+    public static readonly string SELECTVEICULOID =
+      @"SELECT VeiculoID, CategoriaID, Placa, Marca, Modelo, Ano, StatusVeiculo 
+      FROM tblVeiculos
+      WHERE VeiculoID = @Id";
+
+    public int VeiculoID { get; private set; }
+    public int CategoriaID { get; private set; }
+    public string? NomeCategoria { get; private set; }
+    public string? Placa { get; private set; }
+    public string? Marca { get; private set; }
+    public string? Modelo { get; private set; }
+    public int Ano { get; private set; }
+    public string? StatusVeiculo { get; private set; }
+
+    public Veiculo(
+        int categoriaId,
+        string placa,
+        string marca,
+        string modelo,
+        int ano,
+        string statusVeiculo)
     {
+        CategoriaID = categoriaId;
+        Placa = placa;
+        Marca = marca;
+        Modelo = modelo;
+        Ano = ano;
+        StatusVeiculo = statusVeiculo;
+    }
 
-        public readonly static string INSERTVEICULO = @"INSERT INTO tblVeiculos (CategoriaID, Placa, Marca, Modelo, Ano, StatusVeiculo)
-                                                VALUES (@CategoriaID, @Placa, @Marca, @Modelo, 
-                                                        @Ano, @StatusVeiculo)";
+    public void SetVeiculoID(int veiculoID)
+    {
+        VeiculoID = veiculoID;
+    }
 
-        public readonly static string SELECTALLVEICULOS = @"SELECT CategoriaID, 
-                                                    Placa, Marca, Modelo, Ano, StatusVeiculo
-                                                    FROM tblVeiculos";
+    public void SetStatusVeiculo(string statusVeiculo)
+    {
+        StatusVeiculo = statusVeiculo;
+    }
 
-        public readonly static string SELECTVEICULOBYPLACA = @"SELECT VeiculoID, CategoriaID, 
-                                                    Placa, Marca, Modelo, Ano, StatusVeiculo
-                                                    FROM tblVeiculos
-                                                    WHERE Placa = @Placa";
+    public void SetNomeCategoria(string nomeCategoria)
+    {
+        NomeCategoria = nomeCategoria;
+    }
 
-        public readonly static string UPDATESTATUSVEICULO = @"UPDATE tblVeiculos 
-                                                    SET StatusVeiculo = @StatusVeiculo
-                                                    WHERE VeiculoID = @IdVeiculo";
-
-        public readonly static string DELETEVEICULO = @"DELETE FROM tblVeiculos
-                                                WHERE VeiculoID = @IdVeiculo";
-
-        public int VeiculoID { get; private set; }
-        public int CategoriaID { get; private set; }
-        public string NomeCategoria { get; private set; }
-        public string Placa { get; private set; }
-        public string Marca { get; private set; }
-        public string Modelo { get; private set; }
-        public int Ano { get; private set; }
-        public string StatusVeiculo { get; private set; }
-
-        public Veiculo(int categoriaID, string placa, string marca, string modelo, int ano, string statusVeiculo)
-        {
-            CategoriaID = categoriaID;
-            Placa = placa;
-            Marca = marca;
-            Modelo = modelo;
-            Ano = ano;
-            StatusVeiculo = statusVeiculo;
-        }
-
-        public void setVeiculoID(int veiculoID)
-        {
-            VeiculoID = veiculoID;
-        }
-
-        public void setStatusVeiculo(string statusVeiculo)
-        {
-            StatusVeiculo = statusVeiculo;
-        }
-
-        public void setNomeCategoria(string nomeCategoria)
-        {
-            NomeCategoria = nomeCategoria;
-        }
-
-        public override string? ToString()
-        {
-            return $"Categoria: {NomeCategoria}\nPlaca: {Placa}\nMarca: {Marca}\nModelo: {Modelo}\nAno: {Ano}\nStatus: {StatusVeiculo}\n";
-        }
+    public override string? ToString()
+    {
+        return $"Placa: {Placa}\nMarca: {Marca}\nModelo: {Modelo}\nAno: {Ano}\nStatus {StatusVeiculo}\nCategoria: {NomeCategoria}";
     }
 }
